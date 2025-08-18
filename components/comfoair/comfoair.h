@@ -199,6 +199,20 @@ public:
   void set_name(const char* value) {name = value;}
   void set_uart_component(uart::UARTComponent *parent) {set_uart_parent(parent);}
 
+  void set_ventilation_level_medium(int percentage) {
+    if (level < 0 || level > 100) {
+      ESP_LOGI(TAG, "Ignoring invalid ventilation level medium request: %i", percentage);
+      return;
+    }
+
+    ESP_LOGI(TAG, "Setting ventilation level medium to: %i", percentage);
+    {
+      uint8_t command[3] = {(uint8_t) level}; // exhaust air medium / level 2 (%)
+      uint8_t command[6] = {(uint8_t) level}; // supply air medium / level 2 (%)
+      write_command_(CMD_SET_VENTILATION_LEVEL, command, sizeof(command));
+    }
+  }
+
 protected:
 
   void set_level_(int level) {

@@ -1,9 +1,12 @@
 esphome:
   name: comfoair
-  platform: ESP8266
-  board: esp01_1m
   includes:
     - comfoair.h
+
+esp32:
+  board: denky32
+  framework:
+    type: arduino
 
 external_components:
   - source:

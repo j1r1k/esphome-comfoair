@@ -27,6 +27,7 @@ CONF_EXHAUST_FAN_SPEED = "exhaust_fan_speed"
 CONF_INTAKE_FAN_SPEED_RPM = "intake_fan_speed_rpm"
 CONF_EXHAUST_FAN_SPEED_RPM = "exhaust_fan_speed_rpm"
 CONF_VENTILATION_LEVEL = "ventilation_level"
+CONF_VENTILATION_LEVEL_MEDIUM = "ventilation_level_medium"
 CONF_PREHEATING_STATE = "preheating_state"
 CONF_OUTSIDE_AIR_TEMPERATURE = "outside_air_temperature"
 CONF_SUPPLY_AIR_TEMPERATURE = "supply_air_temperature"
@@ -522,6 +523,14 @@ CONFIG_SCHEMA = cv.All(
     .extend(uart.UART_DEVICE_SCHEMA)
     .extend(comfoair_sensors_schemas)
     .extend(cv.COMPONENT_SCHEMA)
+    .extend(cv.Schema(
+        {
+            cv.Optional(CONF_VENTILATION_LEVEL_MEDIUM): number.NUMBER_SCHEMA.extend(
+                {cv.GenerateID(): cv.declare_id(number.Number)},
+                cv.COMPONENT_SCHEMA.extend({}),
+            )
+        }
+    ))
 )
 
 
@@ -547,4 +556,9 @@ def to_code(config):
             if sens is not None:
                 func = getattr(var, "set_" + v)
                 cg.add(func(sens))
+
+    # Check for and register each number individually
+    if CONF_VENTILATION_LEVEL_MEDIUM in config:
+        num = config[CONF_VENTILATION_LEVEL_MEDIUM]
+        yield from number.to_code(var.set_ventilation_level_medium(num))
     cg.add(cg.App.register_climate(var))
