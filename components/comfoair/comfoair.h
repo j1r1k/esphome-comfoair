@@ -189,26 +189,134 @@ public:
   void error_reset(void) {
     uint8_t reset_cmd[4] = {1, 0, 0, 0};
     write_command_(CMD_RESET_AND_SELF_TEST, reset_cmd, sizeof(reset_cmd));
-	}
+  }
 
   void filter_reset(void) {
     uint8_t reset_cmd[4] = {0, 0, 0, 1};
     write_command_(CMD_RESET_AND_SELF_TEST, reset_cmd, sizeof(reset_cmd));
-	}
+  }
+
+  void set_ventilation_level_return_low(int percentage) {
+    if (percentage < 16 || percentage > 98) {
+      ESP_LOGI(TAG, "Ignoring invalid ventilation level return low request: %i", percentage);
+      return;
+    }
+
+    uint8_t return_absent = return_air_level_absent->state;
+    uint8_t supply_absent = supply_air_level_absent->state;
+    uint8_t supply_low = supply_air_level_low->state;
+    uint8_t return_medium = return_air_level_medium->state;
+    uint8_t supply_medium = supply_air_level_medium->state;
+    uint8_t return_high = return_air_level_high->state;
+    uint8_t supply_high = supply_air_level_high->state;
+
+    ESP_LOGI(TAG, "Setting ventilation level return low to: %i", percentage);
+    {
+      uint8_t command[9] = {
+        return_absent, // Byte[0] = Exhaust air absent (%)
+        (uint8_t) percentage, // Byte[1] = Exhaust air low / level 1 (%)
+        return_medium, // Byte[2] = Exhaust air medium / level 2 (%)
+        supply_absent, // Byte[3] = Supply air level absent (%)
+        supply_low, // Byte[4] = Supply air low / level 1 (%)
+        supply_medium, // Byte[5] = Supply air medium / level 2 (%)
+        return_high, // Byte[6] = Exhaust air high / level 3 (%)
+        supply_high, // Byte[7] = Supply air high / level 3 (%)
+        0   // Byte[8] =
+      };
+      write_command_(CMD_SET_VENTILATION_LEVEL, command, sizeof(command));
+    }
+  }
 
   void set_name(const char* value) {name = value;}
   void set_uart_component(uart::UARTComponent *parent) {set_uart_parent(parent);}
 
+  void set_ventilation_level_low(int percentage) {
+    if (percentage < 16 || percentage > 98) {
+      ESP_LOGI(TAG, "Ignoring invalid ventilation level supply low request: %i", percentage);
+      return;
+    }
+
+    uint8_t return_absent = return_air_level_absent->state;
+    uint8_t supply_absent = supply_air_level_absent->state;
+    uint8_t return_medium = return_air_level_medium->state;
+    uint8_t supply_medium = supply_air_level_medium->state;
+    uint8_t return_high = return_air_level_high->state;
+    uint8_t supply_high = supply_air_level_high->state;
+
+    ESP_LOGI(TAG, "Setting ventilation level supply low to: %i", percentage);
+    {
+      uint8_t command[9] = {
+        return_absent, // Byte[0] = Exhaust air absent (%)
+        (uint8_t) percentage, // Byte[1] = Exhaust air low / level 1 (%)
+        return_medium, // Byte[2] = Exhaust air medium / level 2 (%)
+        supply_absent, // Byte[3] = Supply air level absent (%)
+        (uint8_t) percentage, // Byte[4] = Supply air low / level 1 (%)
+        supply_medium, // Byte[5] = Supply air medium / level 2 (%)
+        return_high, // Byte[6] = Exhaust air high / level 3 (%)
+        supply_high, // Byte[7] = Supply air high / level 3 (%)
+        0   // Byte[8] =
+      };
+      write_command_(CMD_SET_VENTILATION_LEVEL, command, sizeof(command));
+    }
+  }
+
+
   void set_ventilation_level_medium(int percentage) {
-    if (level < 0 || level > 100) {
+    if (percentage < 17 || percentage > 99) {
       ESP_LOGI(TAG, "Ignoring invalid ventilation level medium request: %i", percentage);
       return;
     }
 
+    uint8_t return_absent = return_air_level_absent->state;
+    uint8_t supply_absent = supply_air_level_absent->state;
+    uint8_t return_low = return_air_level_low->state;
+    uint8_t supply_low = supply_air_level_low->state;
+    uint8_t return_high = return_air_level_high->state;
+    uint8_t supply_high = supply_air_level_high->state;
+
     ESP_LOGI(TAG, "Setting ventilation level medium to: %i", percentage);
     {
-      uint8_t command[3] = {(uint8_t) level}; // exhaust air medium / level 2 (%)
-      uint8_t command[6] = {(uint8_t) level}; // supply air medium / level 2 (%)
+      uint8_t command[9] = {
+        return_absent, // Byte[0] = Exhaust air absent (%)
+        return_low, // Byte[1] = Exhaust air low / level 1 (%)
+        (uint8_t) percentage, // Byte[2] = Exhaust air medium / level 2 (%)
+        supply_absent, // Byte[3] = Supply air level absent (%)
+        supply_low, // Byte[4] = Supply air low / level 1 (%)
+        (uint8_t) percentage, // Byte[5] = Supply air medium / level 2 (%)
+        return_high, // Byte[6] = Exhaust air high / level 3 (%)
+        supply_high, // Byte[7] = Supply air high / level 3 (%)
+        0   // Byte[8] =
+      };
+      write_command_(CMD_SET_VENTILATION_LEVEL, command, sizeof(command));
+    }
+  }
+
+  void set_ventilation_level_high(int percentage) {
+    if (percentage < 18 || percentage > 100) {
+      ESP_LOGI(TAG, "Ignoring invalid ventilation level high request: %i", percentage);
+      return;
+    }
+
+    uint8_t return_absent = return_air_level_absent->state;
+    uint8_t supply_absent = supply_air_level_absent->state;
+    uint8_t return_low = return_air_level_low->state;
+    uint8_t supply_low = supply_air_level_low->state;
+    uint8_t return_medium = return_air_level_medium->state;
+    uint8_t supply_medium = supply_air_level_medium->state;
+
+    ESP_LOGI(TAG, "Setting ventilation level high to: %i", percentage);
+    {
+      uint8_t command[9] = {
+        return_absent, // Byte[0] = Exhaust air absent (%)
+        return_low, // Byte[1] = Exhaust air low / level 1 (%)
+        return_medium, // Byte[2] = Exhaust air medium / level 2 (%)
+        supply_absent, // Byte[3] = Supply air level absent (%)
+        supply_low, // Byte[4] = Supply air low / level 1 (%)
+        supply_medium, // Byte[5] = Supply air medium / level 2 (%)
+        (uint8_t) percentage, // Byte[6] = Exhaust air high / level 3 (%)
+        (uint8_t) percentage, // Byte[7] = Supply air high / level 3 (%)
+        0   // Byte[8] =
+      };
       write_command_(CMD_SET_VENTILATION_LEVEL, command, sizeof(command));
     }
   }
@@ -431,6 +539,34 @@ protected:
         }
         if (supply_air_level != nullptr) {
           supply_air_level->publish_state(msg[7]);
+        }
+
+        if (return_air_level_absent != nullptr) {
+          return_air_level_absent->publish_state(msg[0]);
+        }
+        if (supply_air_level_absent != nullptr) {
+          supply_air_level_absent->publish_state(msg[3]);
+        }
+
+        if (return_air_level_low != nullptr) {
+          return_air_level_low->publish_state(msg[1]);
+        }
+        if (supply_air_level_low != nullptr) {
+          supply_air_level_low->publish_state(msg[4]);
+        }
+        
+        if (return_air_level_medium != nullptr) {
+          return_air_level_medium->publish_state(msg[2]);
+        }
+        if (supply_air_level_medium != nullptr) {
+          supply_air_level_medium->publish_state(msg[5]);
+        }
+
+        if (return_air_level_high != nullptr) {
+          return_air_level_high->publish_state(msg[10]);
+        }
+        if (supply_air_level_high != nullptr) {
+          supply_air_level_high->publish_state(msg[11]);
         }
 
         if (ventilation_level != nullptr) {
@@ -880,6 +1016,14 @@ public:
   sensor::Sensor *kitchen_hood_temperature{nullptr};
   sensor::Sensor *return_air_level{nullptr};
   sensor::Sensor *supply_air_level{nullptr};
+  sensor::Sensor *return_air_level_absent{nullptr};
+  sensor::Sensor *supply_air_level_absent{nullptr};
+  sensor::Sensor *return_air_level_low{nullptr};
+  sensor::Sensor *supply_air_level_low{nullptr};
+  sensor::Sensor *return_air_level_medium{nullptr};
+  sensor::Sensor *supply_air_level_medium{nullptr};
+  sensor::Sensor *return_air_level_high{nullptr};
+  sensor::Sensor *supply_air_level_high{nullptr};
   sensor::Sensor *bypass_factor{nullptr};
   sensor::Sensor *bypass_step{nullptr};
   sensor::Sensor *bypass_correction{nullptr};
@@ -965,6 +1109,14 @@ public:
   void set_kitchen_hood_temperature(sensor::Sensor *kitchen_hood_temperature) { this->kitchen_hood_temperature = kitchen_hood_temperature; };
   void set_return_air_level(sensor::Sensor *return_air_level) { this->return_air_level = return_air_level; };
   void set_supply_air_level(sensor::Sensor *supply_air_level) { this->supply_air_level = supply_air_level; };
+  void set_return_air_level_absent(sensor::Sensor *return_air_level_absent) { this->return_air_level_absent = return_air_level_absent; };
+  void set_supply_air_level_absent(sensor::Sensor *supply_air_level_absent) { this->supply_air_level_absent = supply_air_level_absent; };
+  void set_return_air_level_low(sensor::Sensor *return_air_level_low) { this->return_air_level_low = return_air_level_low; };
+  void set_supply_air_level_low(sensor::Sensor *supply_air_level_low) { this->supply_air_level_low = supply_air_level_low; };
+  void set_return_air_level_medium(sensor::Sensor *return_air_level_medium) { this->return_air_level_medium = return_air_level_medium; };
+  void set_supply_air_level_medium(sensor::Sensor *supply_air_level_medium) { this->supply_air_level_medium = supply_air_level_medium; };
+  void set_return_air_level_high(sensor::Sensor *return_air_level_high) { this->return_air_level_high = return_air_level_high; };
+  void set_supply_air_level_high(sensor::Sensor *supply_air_level_high) { this->supply_air_level_high = supply_air_level_high; };
   void set_supply_fan_active(binary_sensor::BinarySensor *supply_fan_active) { this->supply_fan_active = supply_fan_active; };
   void set_filter_status(text_sensor::TextSensor *filter_status) { this->filter_status = filter_status; };
   void set_bypass_factor(sensor::Sensor *bypass_factor) { this->bypass_factor = bypass_factor; };

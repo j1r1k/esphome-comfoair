@@ -27,7 +27,6 @@ CONF_EXHAUST_FAN_SPEED = "exhaust_fan_speed"
 CONF_INTAKE_FAN_SPEED_RPM = "intake_fan_speed_rpm"
 CONF_EXHAUST_FAN_SPEED_RPM = "exhaust_fan_speed_rpm"
 CONF_VENTILATION_LEVEL = "ventilation_level"
-CONF_VENTILATION_LEVEL_MEDIUM = "ventilation_level_medium"
 CONF_PREHEATING_STATE = "preheating_state"
 CONF_OUTSIDE_AIR_TEMPERATURE = "outside_air_temperature"
 CONF_SUPPLY_AIR_TEMPERATURE = "supply_air_temperature"
@@ -39,6 +38,14 @@ CONF_REHEATING_TEMPERATURE = "reheating_temperature"
 CONF_KITCHEN_HOOD_TEMPERATURE = "kitchen_hood_temperature"
 CONF_RETURN_AIR_LEVEL = "return_air_level"
 CONF_SUPPLY_AIR_LEVEL = "supply_air_level"
+CONF_RETURN_AIR_LEVEL_ABSENT = "return_air_level_absent"
+CONF_SUPPLY_AIR_LEVEL_ABSENT = "supply_air_level_absent"
+CONF_RETURN_AIR_LEVEL_LOW = "return_air_level_low"
+CONF_SUPPLY_AIR_LEVEL_LOW = "supply_air_level_low"
+CONF_RETURN_AIR_LEVEL_MEDIUM = "return_air_level_medium"
+CONF_SUPPLY_AIR_LEVEL_MEDIUM = "supply_air_level_medium"
+CONF_RETURN_AIR_LEVEL_HIGH = "return_air_level_high"
+CONF_SUPPLY_AIR_LEVEL_HIGH = "supply_air_level_high"
 CONF_SUPPLY_FAN_ACTIVE = "supply_fan_active"
 CONF_FILTER_STATUS = "filter_status"
 CONF_BYPASS_PRESENT = "bypass_present"
@@ -116,6 +123,14 @@ helper_comfoair = {
         CONF_KITCHEN_HOOD_TEMPERATURE,
         CONF_RETURN_AIR_LEVEL,
         CONF_SUPPLY_AIR_LEVEL,
+        CONF_RETURN_AIR_LEVEL_ABSENT,
+        CONF_SUPPLY_AIR_LEVEL_ABSENT,
+        CONF_RETURN_AIR_LEVEL_LOW,
+        CONF_SUPPLY_AIR_LEVEL_LOW,
+        CONF_RETURN_AIR_LEVEL_MEDIUM,
+        CONF_SUPPLY_AIR_LEVEL_MEDIUM,
+        CONF_RETURN_AIR_LEVEL_HIGH,
+        CONF_SUPPLY_AIR_LEVEL_HIGH,
         CONF_BYPASS_VALVE,
         CONF_BYPASS_FACTOR,
         CONF_BYPASS_STEP,
@@ -181,7 +196,7 @@ helper_comfoair = {
         CONF_FILTER_STATUS,
         CONF_FROST_PROTECTION_LEVEL,
         CONF_PREHEATING_VALVE,
-    ],
+    ]
 }
 
 comfoair_sensors_schemas = cv.Schema(
@@ -271,14 +286,62 @@ comfoair_sensors_schemas = cv.Schema(
         ).extend(),
         cv.Optional(CONF_RETURN_AIR_LEVEL): sensor.sensor_schema(
             device_class=DEVICE_CLASS_VOLUME,
-            unit_of_measurement=UNIT_CUBIC_METER,
-            accuracy_decimals=1,
+            unit_of_measurement=UNIT_PERCENT,
+            accuracy_decimals=0,
             state_class=STATE_CLASS_MEASUREMENT,
         ).extend(),
         cv.Optional(CONF_SUPPLY_AIR_LEVEL): sensor.sensor_schema(
             device_class=DEVICE_CLASS_VOLUME,
-            unit_of_measurement=UNIT_CUBIC_METER,
-            accuracy_decimals=1,
+            unit_of_measurement=UNIT_PERCENT,
+            accuracy_decimals=0,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ).extend(),
+        cv.Optional(CONF_RETURN_AIR_LEVEL_ABSENT): sensor.sensor_schema(
+            device_class=DEVICE_CLASS_VOLUME,
+            unit_of_measurement=UNIT_PERCENT,
+            accuracy_decimals=0,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ).extend(),
+        cv.Optional(CONF_SUPPLY_AIR_LEVEL_ABSENT): sensor.sensor_schema(
+            device_class=DEVICE_CLASS_VOLUME,
+            unit_of_measurement=UNIT_PERCENT,
+            accuracy_decimals=0,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ).extend(),
+        cv.Optional(CONF_RETURN_AIR_LEVEL_LOW): sensor.sensor_schema(
+            device_class=DEVICE_CLASS_VOLUME,
+            unit_of_measurement=UNIT_PERCENT,
+            accuracy_decimals=0,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ).extend(),
+        cv.Optional(CONF_SUPPLY_AIR_LEVEL_LOW): sensor.sensor_schema(
+            device_class=DEVICE_CLASS_VOLUME,
+            unit_of_measurement=UNIT_PERCENT,
+            accuracy_decimals=0,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ).extend(),
+        cv.Optional(CONF_RETURN_AIR_LEVEL_MEDIUM): sensor.sensor_schema(
+            device_class=DEVICE_CLASS_VOLUME,
+            unit_of_measurement=UNIT_PERCENT,
+            accuracy_decimals=0,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ).extend(),
+        cv.Optional(CONF_SUPPLY_AIR_LEVEL_MEDIUM): sensor.sensor_schema(
+            device_class=DEVICE_CLASS_VOLUME,
+            unit_of_measurement=UNIT_PERCENT,
+            accuracy_decimals=0,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ).extend(),
+        cv.Optional(CONF_RETURN_AIR_LEVEL_HIGH): sensor.sensor_schema(
+            device_class=DEVICE_CLASS_VOLUME,
+            unit_of_measurement=UNIT_PERCENT,
+            accuracy_decimals=0,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ).extend(),
+        cv.Optional(CONF_SUPPLY_AIR_LEVEL_HIGH): sensor.sensor_schema(
+            device_class=DEVICE_CLASS_VOLUME,
+            unit_of_measurement=UNIT_PERCENT,
+            accuracy_decimals=0,
             state_class=STATE_CLASS_MEASUREMENT,
         ).extend(),
         cv.Optional(CONF_BYPASS_FACTOR): sensor.sensor_schema(
@@ -523,14 +586,6 @@ CONFIG_SCHEMA = cv.All(
     .extend(uart.UART_DEVICE_SCHEMA)
     .extend(comfoair_sensors_schemas)
     .extend(cv.COMPONENT_SCHEMA)
-    .extend(cv.Schema(
-        {
-            cv.Optional(CONF_VENTILATION_LEVEL_MEDIUM): number.NUMBER_SCHEMA.extend(
-                {cv.GenerateID(): cv.declare_id(number.Number)},
-                cv.COMPONENT_SCHEMA.extend({}),
-            )
-        }
-    ))
 )
 
 
@@ -556,9 +611,4 @@ def to_code(config):
             if sens is not None:
                 func = getattr(var, "set_" + v)
                 cg.add(func(sens))
-
-    # Check for and register each number individually
-    if CONF_VENTILATION_LEVEL_MEDIUM in config:
-        num = config[CONF_VENTILATION_LEVEL_MEDIUM]
-        yield from number.to_code(var.set_ventilation_level_medium(num))
     cg.add(cg.App.register_climate(var))
